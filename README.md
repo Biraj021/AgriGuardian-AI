@@ -1,1 +1,1 @@
-# AgriGuardian-AI
+# AgriGuardian-AI for farmers
