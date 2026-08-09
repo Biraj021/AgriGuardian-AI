@@ -1,0 +1,108 @@
+# ==================================================
+# AgriGuardian AI — Root .gitignore
+# ==================================================
+
+# Python / Backend
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+.venv/
+venv/
+env/
+.env
+.env.*
+!.env.example
+*.log
+*.pot
+*.pyc
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.ruff_cache/
+
+# AI / ML artifacts
+ai/data/raw/*
+ai/data/processed/*
+ai/data/external/*
+!ai/data/raw/.gitkeep
+!ai/data/processed/.gitkeep
+!ai/data/external/.gitkeep
+ai/models/**/*.pkl
+ai/models/**/*.joblib
+ai/models/**/*.h5
+ai/models/**/*.pt
+ai/models/**/*.pth
+ai/registry/*.pkl
+ai/registry/*.joblib
+ai/.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Node / Frontend
+node_modules/
+.npm
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.pnp.*
+dist/
+build/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+.eslintcache
+
+# Database
+*.sqlite
+*.sqlite3
+database/backups/*.sql
+database/backups/*.dump
+
+# Docker
+.docker/
+
+# IDE & OS
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Secrets & Credentials
+*.pem
+*.key
+*.cert
+*.p12
+secrets/
+credentials/
+
+# Hardware
+hardware/pcb/*.gbr
+hardware/pcb/*.drl
+
+# Deployment
+deployment/terraform/.terraform/
+deployment/terraform/*.tfstate
+deployment/terraform/*.tfstate.backup
+deployment/terraform/*.tfvars
+!deployment/terraform/*.tfvars.example

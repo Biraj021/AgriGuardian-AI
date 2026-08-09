@@ -1,0 +1,34 @@
+# ==================================================
+# Backend Requirements for AgriGuardian AI
+# ==================================================
+
+# Core API Framework
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+pydantic>=2.6.0
+pydantic-settings>=2.2.1
+
+# Database & ORM
+SQLAlchemy>=2.0.29
+asyncpg>=0.29.0       # Async PostgreSQL driver
+alembic>=1.13.1       # Database migrations
+
+# AI & Data Processing
+xgboost>=2.0.3
+scikit-learn>=1.4.1.post1
+pandas>=2.2.1
+numpy>=1.26.4
+shap>=0.45.0
+
+# External API Requests & Resilience
+httpx>=0.27.0
+tenacity>=8.2.3
+
+# Security & Authentication (For Later Modules)
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+python-multipart>=0.0.9
+email-validator>=2.1.0
+
+aiosqlite>=0.20.0
+joblib>=1.3.0             # Used by AI engine to load XGBoost model

@@ -1,0 +1,143 @@
+name: CI — Continuous Integration
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [develop]
+
+jobs:
+  # ── Backend Linting ───────────────────────────────
+  lint-backend:
+    name: Lint Backend (Python)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements-dev.txt
+      - name: Run Black (formatter check)
+        run: cd backend && black --check .
+      - name: Run isort (import order check)
+        run: cd backend && isort --check-only .
+      - name: Run flake8 (linter)
+        run: cd backend && flake8 .
+      - name: Run mypy (type checker)
+        run: cd backend && mypy app/
+
+  # ── Backend Tests ─────────────────────────────────
+  test-backend:
+    name: Test Backend (pytest)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: timescale/timescaledb:latest-pg16
+        env:
+          POSTGRES_DB: agriguardian_test
+          POSTGRES_USER: agriadmin
+          POSTGRES_PASSWORD: testpassword
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt -r requirements-dev.txt
+      - name: Run migrations
+        env:
+          DATABASE_URL: postgresql+asyncpg://agriadmin:testpassword@localhost:5432/agriguardian_test
+        run: cd backend && alembic upgrade head
+      - name: Run tests with coverage
+        env:
+          DATABASE_URL: postgresql+asyncpg://agriadmin:testpassword@localhost:5432/agriguardian_test
+          REDIS_URL: redis://localhost:6379/0
+          APP_ENV: testing
+        run: |
+          cd backend
+          pytest tests/ --cov=app --cov-report=xml --cov-fail-under=70 -v
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v4
+        with:
+          file: backend/coverage.xml
+          flags: backend
+
+  # ── Frontend Linting ──────────────────────────────
+  lint-frontend:
+    name: Lint Frontend (ESLint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        run: cd frontend && npm ci
+      - name: Run ESLint
+        run: cd frontend && npm run lint
+      - name: Run TypeScript check
+        run: cd frontend && npm run type-check
+
+  # ── Frontend Tests ────────────────────────────────
+  test-frontend:
+    name: Test Frontend (Vitest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        run: cd frontend && npm ci
+      - name: Run tests
+        run: cd frontend && npm run test:ci
+      - name: Build (verify production build)
+        run: cd frontend && npm run build
+
+  # ── Security Scanning ─────────────────────────────
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install bandit
+        run: pip install bandit
+      - name: Run bandit (Python security scanner)
+        run: bandit -r backend/app/ -ll
+      - name: npm audit (frontend)
+        run: cd frontend && npm audit --audit-level=high
