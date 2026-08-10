@@ -17,6 +17,29 @@
 
 </div>
 
+## Current local MVP startup
+
+The active development database is `backend/agri_guardian.db`; do not use the
+empty root-level database file. Apply forward migrations before starting the
+backend:
+
+```powershell
+cd backend
+alembic upgrade head
+uvicorn src.api.main:app --reload --port 8000
+```
+
+In a second terminal:
+
+```powershell
+cd frontend
+npm.cmd run dev -- --host 127.0.0.1 --port 5173
+```
+
+With Docker installed, `docker compose up --build` starts the frontend,
+FastAPI backend, SQLite-mounted application data, and local Mosquitto broker.
+MQTT broker and physical ESP32 verification remain required before field use.
+
 ---
 
 ## 📋 Table of Contents
@@ -408,7 +431,7 @@ pip install -r requirements-dev.txt
 alembic upgrade head
 
 # Start the development server
-uvicorn app.main:app --reload --port 8000
+uvicorn src.api.main:app --reload --port 8000
 ```
 
 #### Frontend

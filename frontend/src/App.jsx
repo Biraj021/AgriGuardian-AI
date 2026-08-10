@@ -41,9 +41,9 @@ function App() {
                   <Route path="/recommendations" element={<Recommendations />} />
                   <Route path="/weather" element={<WeatherPage />} />
                   <Route path="/market" element={<MarketPage />} />
-                  <Route path="/alerts" element={<div className="p-6">Disaster Alerts (Coming Soon)</div>} />
-                  <Route path="/schemes" element={<div className="p-6">Government Schemes (Coming Soon)</div>} />
-                  <Route path="/profile" element={<div className="p-6">Profile (Coming Soon)</div>} />
+                  <Route path="/alerts" element={<div className="p-6 text-gray-600">Disaster alerts are not implemented in this MVP.</div>} />
+                  <Route path="/schemes" element={<div className="p-6 text-gray-600">Government schemes are not implemented in this MVP.</div>} />
+                  <Route path="/profile" element={<div className="p-6 text-gray-600">Profile management is not implemented in this MVP.</div>} />
                 </Routes>
               </LayoutWrapper>
             </ProtectedRoute>

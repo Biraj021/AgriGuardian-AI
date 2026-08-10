@@ -6,6 +6,8 @@ import {
   getIrrigationRecommendationApi,
   getWeatherApi,
   getMarketApi,
+  getAnalyticsApi,
+  getRecommendationHistoryApi,
 } from '../../api/client';
 import Skeleton from '../../components/common/Skeleton';
 import HeroRecommendationCard from '../../components/cards/HeroRecommendationCard';
@@ -34,9 +36,12 @@ function DashboardSkeleton() {
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const [data] = useState(dashboardMockData);
   const [farm, setFarm] = useState(null);
   const [dbRecommendation, setDbRecommendation] = useState(null);
+  const [device, setDevice] = useState(null);
+  const [latestSensor, setLatestSensor] = useState(null);
+  const [analytics, setAnalytics] = useState(null);
+  const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [backendError, setBackendError] = useState(null);
   const [weatherIsDemo, setWeatherIsDemo] = useState(true);
@@ -61,14 +66,21 @@ export default function Dashboard() {
         if (dashboardRes.latest_recommendation) {
           setDbRecommendation(dashboardRes.latest_recommendation);
         }
+        setDevice(dashboardRes.device || null);
         if (dashboardRes.latest_sensor) {
           const s = dashboardRes.latest_sensor;
+          setLatestSensor(s);
           if (s.soil_moisture != null) setSoilMoisture(s.soil_moisture);
           if (s.temperature != null) setTemperature(s.temperature);
           if (s.humidity != null) setHumidity(s.humidity);
         }
+        const [analyticsRes, historyRes] = await Promise.all([
+          getAnalyticsApi(), getRecommendationHistoryApi(),
+        ]);
+        setAnalytics(analyticsRes);
+        setHistory(historyRes.recommendations || []);
       } catch (e) {
-        console.warn('Dashboard API unavailable, using fallback:', e);
+        console.warn('Dashboard API unavailable:', e);
         setBackendError(e.message);
       }
 
@@ -102,6 +114,8 @@ export default function Dashboard() {
         rainfall_prev_day: parseFloat(rainfall),
       });
       setAiResult(res);
+      const historyRes = await getRecommendationHistoryApi();
+      setHistory(historyRes.recommendations || []);
     } catch (err) {
       setAiError(err.message || 'AI prediction failed');
       setAiResult(null);
@@ -112,8 +126,8 @@ export default function Dashboard() {
 
   if (loading) return <DashboardSkeleton />;
 
-  const farmName = farm?.name || 'Green Horizon Farm';
-  const cropName = farm?.primary_crop || 'Wheat';
+  const farmName = farm?.name || 'No active farm';
+  const cropName = farm?.primary_crop || 'No crop configured';
 
   const heroRecommendation = aiResult
     ? {
@@ -135,7 +149,20 @@ export default function Dashboard() {
         recommendedTime: 'Check live status',
         estWater: 'Check live status',
       }
-    : data.heroRecommendation;
+    : null;
+
+  const historyRows = history.map((item) => ({
+    date: item.created_at ? new Date(item.created_at).toLocaleString() : 'Unknown',
+    decision: item.decision,
+    confidence: item.confidence != null ? `${Math.round(item.confidence * 100)}%` : 'N/A',
+    reason: item.reason || 'No reason recorded',
+  }));
+
+  const chartAnalytics = analytics ? {
+    labels: analytics.series.labels.map((label) => new Date(label).toLocaleString()),
+    soilMoisture: analytics.series.soil_moisture,
+    temperature: analytics.series.temperature,
+  } : null;
 
   return (
     <div className="space-y-4 pb-10">
@@ -161,15 +188,21 @@ export default function Dashboard() {
 
       {backendError && (
         <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm p-3.5 rounded-xl">
-          {backendError}. Showing cached/demo data where available.
+          {backendError}. Core farm data is unavailable; no farm data is being substituted.
         </div>
       )}
 
       {dbRecommendation && !aiResult && (
         <div className="bg-blue-50 border border-blue-100 text-blue-800 text-xs p-3 rounded-xl">
-          Last saved recommendation from database: <strong>{dbRecommendation.decision}</strong>
+          Last saved recommendation from database: <strong>{dbRecommendation.decision}</strong>{dbRecommendation.created_at ? ` (${new Date(dbRecommendation.created_at).toLocaleString()})` : ''}
         </div>
       )}
+
+      <section className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+        <div className="bg-white border border-gray-100 rounded-xl p-4"><p className="text-xs text-gray-400">Farm</p><p className="font-semibold text-gray-800">{farm?.name || 'No active farm'}</p></div>
+        <div className="bg-white border border-gray-100 rounded-xl p-4"><p className="text-xs text-gray-400">Device</p><p className="font-semibold text-gray-800">{device ? `${device.mac_address} · ${device.status}` : 'No active device'}</p></div>
+        <div className="bg-white border border-gray-100 rounded-xl p-4"><p className="text-xs text-gray-400">Latest sensor reading</p><p className="font-semibold text-gray-800">{latestSensor?.recorded_at ? new Date(latestSensor.recorded_at).toLocaleString() : 'No readings'}</p></div>
+      </section>
 
       {/* AI Recommendation Engine */}
       <div className="bg-gradient-to-r from-slate-900 to-slate-800 p-5 rounded-2xl text-white shadow-lg border border-slate-700">
@@ -236,12 +269,14 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <HeroRecommendationCard recommendation={heroRecommendation} />
+      {heroRecommendation ? <HeroRecommendationCard recommendation={heroRecommendation} /> : (
+        <div className="bg-white border border-gray-100 rounded-xl p-5 text-sm text-gray-500">No saved recommendation yet. Run the irrigation analysis to create one.</div>
+      )}
 
       <section>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-bold text-gray-800">Live Farm Status</h2>
-          <span className="text-xs text-emerald-600 font-semibold">Real-time (from your inputs)</span>
+          <span className="text-xs text-amber-600 font-semibold">Current values: database reading or user input</span>
         </div>
         <LiveFarmStatus liveStatus={{
           soilMoisture: {
@@ -267,33 +302,37 @@ export default function Dashboard() {
             range: 'Next 24h', color: 'text-amber-500',
             sparkline: [0, 0, 0, parseFloat(rainfall), parseFloat(rainfall)],
           },
-          waterLevel: {
-            value: 85, unit: '%',
-            status: 'Good', range: '30% - 100%', color: 'text-green-500',
-            sparkline: [88, 87, 86, 85, 85],
-          },
         }} />
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <WeatherForecast
-          weather={data.environmentalIntel.weather}
+          weather={dashboardMockData.environmentalIntel.weather}
           location="Punjab, India"
           isDemo={weatherIsDemo}
         />
-        <DisasterAlerts alerts={data.environmentalIntel.alerts} />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <GovernmentSchemes schemes={data.governmentSupport} />
-        <div className="lg:col-span-2">
-          <SensorTrendsChart analytics={data.analytics} />
+        <div>
+          <p className="mb-2 text-xs font-semibold text-amber-700">Demo Data — live alerts are not implemented in MVP.</p>
+          <DisasterAlerts alerts={dashboardMockData.environmentalIntel.alerts} />
         </div>
       </div>
 
-      <MarketPrices markets={data.marketIntel} isDemo={marketIsDemo} />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div>
+          <p className="mb-2 text-xs font-semibold text-amber-700">Demo Data — schemes are not implemented in MVP.</p>
+          <GovernmentSchemes schemes={dashboardMockData.governmentSupport} />
+        </div>
+        <div className="lg:col-span-2">
+          {chartAnalytics ? <SensorTrendsChart analytics={chartAnalytics} /> : <div className="bg-white border border-gray-100 rounded-xl p-5 text-sm text-gray-500">No sensor trend data available.</div>}
+        </div>
+      </div>
 
-      <RecommendationHistory history={data.history} />
+      <div>
+        <p className="mb-2 text-xs font-semibold text-amber-700">Demo Data — dashboard market cards await live API binding. Visit Market for the API-backed view.</p>
+        <MarketPrices markets={dashboardMockData.marketIntel} isDemo={marketIsDemo} />
+      </div>
+
+      <RecommendationHistory history={historyRows} />
 
       <footer className="pt-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-gray-400 font-medium">
         <span>© 2026 AgriGuardian AI. All rights reserved.</span>

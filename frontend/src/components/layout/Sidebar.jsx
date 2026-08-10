@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { dashboardMockData } from '../../services/mockData';
 import { 
   MdDashboard, 
   MdPsychology, 
@@ -110,8 +109,8 @@ export default function Sidebar({ isOpen, setIsOpen }) {
               <span className="text-xl">🏡</span>
               <div className="overflow-hidden">
                 <p className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Selected Farm</p>
-                <p className="text-[12px] font-semibold text-gray-800 truncate">{dashboardMockData.farmName}</p>
-                <p className="text-[10px] text-gray-500">{dashboardMockData.farmSize}</p>
+                <p className="text-[12px] font-semibold text-gray-800 truncate">Farm selection is not implemented</p>
+                <p className="text-[10px] text-amber-600">No static farm data shown</p>
               </div>
             </div>
             <MdKeyboardArrowDown className="text-gray-400 w-5 h-5" />
@@ -128,8 +127,8 @@ export default function Sidebar({ isOpen, setIsOpen }) {
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-[11px] font-semibold text-gray-700">{dashboardMockData.location.split(',')[0]}</p>
-                <p className="text-[9px] text-gray-400">{dashboardMockData.location.split(',')[1].trim()}</p>
+                <p className="text-[11px] font-semibold text-gray-700">Location unavailable</p>
+                <p className="text-[9px] text-gray-400">Configure on farm profile</p>
               </div>
             </div>
             <div className="flex items-center justify-between pt-2 border-t border-gray-100 text-[10px] text-gray-500 font-medium">

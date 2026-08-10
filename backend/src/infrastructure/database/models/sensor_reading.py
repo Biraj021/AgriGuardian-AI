@@ -12,6 +12,8 @@ class SensorReading(Base):
     temperature: Mapped[float | None] = mapped_column(Float, nullable=True)
     humidity: Mapped[float | None] = mapped_column(Float, nullable=True)
     soil_moisture: Mapped[float | None] = mapped_column(Float, nullable=True)
+    rainfall: Mapped[float | None] = mapped_column(Float, nullable=True)
+    water_level: Mapped[float | None] = mapped_column(Float, nullable=True)
     recorded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
     # Relationships
@@ -22,6 +24,8 @@ class SensorReading(Base):
         CheckConstraint("temperature BETWEEN -50 AND 100", name="chk_temperature_range"),
         CheckConstraint("humidity BETWEEN 0 AND 100", name="chk_humidity_range"),
         CheckConstraint("soil_moisture BETWEEN 0 AND 100", name="chk_soil_moisture_range"),
+        CheckConstraint("rainfall >= 0", name="chk_rainfall_range"),
+        CheckConstraint("water_level BETWEEN 0 AND 100", name="chk_water_level_range"),
         # Optimized index for finding the latest readings for a specific device
         Index("ix_sensor_readings_device_recorded", "device_id", "recorded_at", postgresql_ops={"recorded_at": "DESC"}),
     )

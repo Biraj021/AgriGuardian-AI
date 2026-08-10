@@ -72,6 +72,18 @@ async def get_dashboard(
                     "recorded_at": reading.recorded_at.isoformat() if reading.recorded_at else None,
                 }
 
+    device_payload = None
+    if farms:
+        device_result = await db.execute(
+            select(Device).where(Device.farm_id == farms[0].id, Device.is_active == True).limit(1)
+        )
+        device = device_result.scalars().first()
+        if device:
+            device_payload = {
+                "id": str(device.id), "mac_address": device.mac_address, "status": device.status,
+                "last_seen_at": device.last_seen_at.isoformat() if device.last_seen_at else None,
+            }
+
     return {
         "status": "success",
         "source": "database",
@@ -83,5 +95,6 @@ async def get_dashboard(
         "farm": farm_payload,
         "latest_recommendation": latest_recommendation,
         "latest_sensor": latest_sensor,
+        "device": device_payload,
         "farms_count": len(farms),
     }

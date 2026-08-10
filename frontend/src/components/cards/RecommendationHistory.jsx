@@ -29,6 +29,7 @@ export default function RecommendationHistory({ history }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
+            {history.length === 0 && <tr><td colSpan="4" className="py-6 text-center text-sm text-gray-500">No saved recommendations yet.</td></tr>}
             {history.map((row, i) => (
               <tr key={i} className="hover:bg-gray-50/50 transition-colors">
                 <td className="py-3 pr-4 text-xs font-semibold text-gray-600 whitespace-nowrap">

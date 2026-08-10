@@ -113,21 +113,6 @@ export default function Login() {
           </button>
         </form>
 
-        {!isSignUp && (
-          <div className="mt-4">
-            <button
-              type="button"
-              onClick={() => {
-                setEmail('demo@agriguardian.com');
-                setPassword('Demo@12345');
-              }}
-              className="w-full py-2 px-4 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-medium text-xs rounded-lg transition-all border border-emerald-200"
-            >
-              Fill Demo Credentials (demo@agriguardian.com)
-            </button>
-          </div>
-        )}
-
         <div className="mt-6 pt-6 border-t border-gray-50 text-center">
           <button
             onClick={() => {

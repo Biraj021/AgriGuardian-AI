@@ -35,7 +35,7 @@ test:
 	pytest
 
 run-backend:
-	uvicorn backend.src.api.server:app --reload --host 0.0.0.0 --port 8000
+	cd backend && uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
 
 run-frontend:
 	cd frontend && npm run dev

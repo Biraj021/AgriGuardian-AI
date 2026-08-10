@@ -1,53 +1,26 @@
-# Hardware — AgriGuardian AI IoT Node
+# AgriGuardian AI IoT Node
 
-## Overview
+`hardwere/` is the current hardware directory name used by this repository.
 
-The hardware layer consists of an **ESP32 microcontroller** connected to:
-- **DHT22** — Temperature + Humidity sensor
-- **Capacitive Soil Moisture Sensor** — Soil water content
-- **Rain Sensor** — Rainfall detection
-- **HC-SR04 or Float Sensor** — Water level measurement
-- **4-Channel Relay Module** — Irrigation pump control
+## Contents
 
-## Folder Contents
+- `firmware/08_relay_control/agriguardian_node.ino`: ESP32 firmware.
+- `config/config.h.example`: Wi-Fi, MQTT, device-ID, pin, and calibration template.
+- `docs/`: wiring, library, firmware setup, calibration, and MQTT guides.
 
-```
-hardware/
-├── esp32/
-│   ├── firmware/        ← Main Arduino/PlatformIO firmware
-│   ├── config/          ← WiFi/MQTT/pin configuration
-│   └── libraries/       ← Custom sensor libraries
-├── schematics/          ← Fritzing circuit diagrams
-├── pcb/                 ← PCB layout (future)
-└── docs/
-    ├── WIRING_GUIDE.md  ← Step-by-step setup
-    ├── LIBRARIES.md     ← Required Arduino libraries
-    └── SENSOR_CALIBRATION.md
-```
+## MQTT contract
 
-## Quick Start
-
-1. See [WIRING_GUIDE.md](docs/WIRING_GUIDE.md) for circuit connections
-2. Install required libraries listed in [LIBRARIES.md](docs/LIBRARIES.md)
-3. Copy `config/config.h.example` to `config/config.h`
-4. Fill in your WiFi and MQTT credentials
-5. Flash to ESP32 via Arduino IDE or PlatformIO
-
-## MQTT Topics
-
-| Topic | Direction | Payload |
+| Topic | ESP32 direction | Purpose |
 |---|---|---|
-| `agriguardian/farm/{device_id}/telemetry` | Publish | JSON sensor data |
-| `agriguardian/farm/{device_id}/control` | Subscribe | JSON control command |
-| `agriguardian/farm/{device_id}/status` | Publish | Device heartbeat |
+| `agriguardian/farm/{device_id}/telemetry` | Publish | Temperature, humidity, soil moisture, rainfall, water level |
+| `agriguardian/farm/{device_id}/status` | Publish | Online/pump heartbeat status |
+| `agriguardian/farm/{device_id}/control` | Subscribe | Validated `PUMP_ON` / `PUMP_OFF` commands |
 
-## Sensor Pin Map (Default)
+The backend validates that `{device_id}` matches a known active device MAC address before persisting telemetry. Hardware, broker, and relay behavior still require field verification.
 
-| Sensor | Pin |
-|---|---|
-| DHT22 Data | GPIO4 |
-| Soil Moisture Analog | GPIO34 |
-| Rain Sensor Digital | GPIO35 |
-| Water Level Trigger | GPIO5 |
-| Water Level Echo | GPIO18 |
-| Relay 1 (Pump) | GPIO26 |
+## Quick start
+
+1. Copy `config/config.h.example` to a local `config.h`.
+2. Set Wi-Fi, MQTT, and the device MAC/ID to the value registered in the backend.
+3. Follow [WIRING_GUIDE.md](docs/WIRING_GUIDE.md) and [FIRMWARE_SETUP.md](docs/FIRMWARE_SETUP.md).
+4. Compile/upload with Arduino IDE or PlatformIO.

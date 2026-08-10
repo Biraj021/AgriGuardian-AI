@@ -117,3 +117,19 @@ export async function getWeatherApi() {
 export async function getMarketApi() {
   return apiFetch('/market/prices');
 }
+
+export async function getSensorRecentApi() {
+  return apiFetch('/sensor/recent');
+}
+
+export async function getDevicesApi() {
+  return apiFetch('/device/');
+}
+
+export async function getAnalyticsApi() {
+  return apiFetch('/analytics/overview');
+}
+
+export async function getRecommendationHistoryApi() {
+  return apiFetch('/recommendation/history');
+}

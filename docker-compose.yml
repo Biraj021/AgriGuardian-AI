@@ -1,115 +1,71 @@
-version: "3.9"
-
-# ==================================================
-# AgriGuardian AI — Local Development Stack
-# Usage: docker compose up --build
-# ==================================================
-
 services:
-
-  # ── PostgreSQL Database ─────────────────────────
-  postgres:
-    image: timescale/timescaledb:latest-pg16
-    container_name: agriguardian_postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-agriguardian}
-      POSTGRES_USER: ${POSTGRES_USER:-agriadmin}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devpassword}
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./database/seeds:/docker-entrypoint-initdb.d
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-agriadmin}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # ── Redis Cache & Broker ────────────────────────
-  redis:
-    image: redis:7-alpine
-    container_name: agriguardian_redis
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # ── MQTT Broker (Mosquitto) ─────────────────────
   mqtt:
     image: eclipse-mosquitto:2
     container_name: agriguardian_mqtt
     restart: unless-stopped
     ports:
       - "1883:1883"
-      - "9001:9001"
     volumes:
-      - ./deployment/docker/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./deploy/docker/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
       - mqtt_data:/mosquitto/data
       - mqtt_logs:/mosquitto/log
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_sub -h localhost -t '$$SYS/broker/uptime' -C 1 -W 3"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # ── FastAPI Backend ─────────────────────────────
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-      target: development
     container_name: agriguardian_backend
     restart: unless-stopped
     environment:
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-agriadmin}:${POSTGRES_PASSWORD:-devpassword}@postgres:5432/${POSTGRES_DB:-agriguardian}
-      - REDIS_URL=redis://redis:6379/0
-      - MQTT_BROKER_HOST=mqtt
-      - MQTT_BROKER_PORT=1883
-      - APP_ENV=development
+      DATABASE_URL: sqlite+aiosqlite:///./agri_guardian.db
+      MQTT_BROKER_HOST: mqtt
+      MQTT_BROKER_PORT: 1883
+      APP_ENV: development
     env_file:
       - .env
     ports:
       - "8000:8000"
     volumes:
       - ./backend:/app
-      - ./ai/registry:/app/ai_registry
+      - ./ai:/app/ai:ro
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
       mqtt:
-        condition: service_started
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+        condition: service_healthy
+    command: >
+      sh -c "alembic upgrade head && uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # ── React Frontend ──────────────────────────────
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      target: development
     container_name: agriguardian_frontend
     restart: unless-stopped
     environment:
-      - VITE_API_BASE_URL=http://localhost:8000/api/v1
-      - VITE_WS_URL=ws://localhost:8000/ws
+      VITE_API_BASE_URL: http://localhost:8000/api/v1
     ports:
       - "5173:5173"
     volumes:
       - ./frontend:/app
       - /app/node_modules
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:5173').then(r => { if (!r.ok) process.exit(1) })"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
-  postgres_data:
-  redis_data:
   mqtt_data:
   mqtt_logs:
-
-networks:
-  default:
-    name: agriguardian_network
