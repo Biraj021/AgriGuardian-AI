@@ -9,8 +9,8 @@
 // WiFi
 // ----------------------
 
-#define WIFI_SSID "Wifi"
-#define WIFI_PASSWORD "Password"
+#define WIFI_SSID "your-wifi"
+#define WIFI_PASSWORD "your-wifi-password"
 
 // ----------------------
 // MQTT
