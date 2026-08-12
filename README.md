@@ -95,7 +95,9 @@ IoT Sensors → Real-time Data → AI Decision Engine → Explainable Recommenda
 
 ## 🏗️ System Architecture
 
-```
+
+<img width="1536" height="1024" alt="WhatsApp Image 2026-08-11 at 7 10 45 PM" src="https://github.com/user-attachments/assets/8420d461-21d1-4bb9-b97a-cd831fae8e47" />
+
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                           AGRIGUARDIAN AI — SYSTEM ARCHITECTURE                  │
 └─────────────────────────────────────────────────────────────────────────────────┘
