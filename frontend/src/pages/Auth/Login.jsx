@@ -125,6 +125,21 @@ export default function Login() {
           </button>
         </div>
 
+        {!isSignUp && (
+          <div className="mt-4 bg-emerald-50 border border-emerald-100 rounded-lg p-3 text-xs text-emerald-800">
+            <p className="font-semibold mb-1">🌾 Demo Account</p>
+            <p>Email: <code className="font-mono bg-emerald-100 px-1 rounded">demo@agriguardian.com</code></p>
+            <p>Password: <code className="font-mono bg-emerald-100 px-1 rounded">Demo@12345</code></p>
+            <button
+              type="button"
+              onClick={() => { setEmail('demo@agriguardian.com'); setPassword('Demo@12345'); }}
+              className="mt-2 text-emerald-700 font-semibold underline hover:no-underline"
+            >
+              Fill demo credentials
+            </button>
+          </div>
+        )}
+
       </div>
     </div>
   );

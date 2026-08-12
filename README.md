@@ -17,28 +17,42 @@
 
 </div>
 
-## Current local MVP startup
+## 🚀 Current Verified MVP Status & Local Startup
 
-The active development database is `backend/agri_guardian.db`; do not use the
-empty root-level database file. Apply forward migrations before starting the
-backend:
+### Core Verified Flow
+`Sensor Data Ingestion / Manual Inputs → FastAPI Backend → SQLite Database → XGBoost AI Model Inference → Recommendation & History Persistence → React Dashboard → Device Control & Audit Logging`
 
+### Test Suite Status
+- **Backend & AI Unit Tests**: 18/18 passed (`python -m pytest`)
+- **Frontend Production Build**: Vite production build succeeded (`npm.cmd run build`)
+- **Database Migrations**: Alembic forward migrations verified (`alembic upgrade head`)
+- **Git Diff**: Clean (`git diff --check`)
+
+### How to Run Locally
+
+1. **Backend API Server**:
 ```powershell
 cd backend
+python seed.py
 alembic upgrade head
 uvicorn src.api.main:app --reload --port 8000
 ```
 
-In a second terminal:
-
+2. **Frontend Dashboard**:
 ```powershell
 cd frontend
 npm.cmd run dev -- --host 127.0.0.1 --port 5173
 ```
 
-With Docker installed, `docker compose up --build` starts the frontend,
-FastAPI backend, SQLite-mounted application data, and local Mosquitto broker.
-MQTT broker and physical ESP32 verification remain required before field use.
+3. **Run Test Suite**:
+```powershell
+python -m pytest
+```
+
+### Verification & Environment Notes
+- **Verified Software Components**: FastAPI routes (`/health`, `/api/v1/auth/`, `/api/v1/farm/`, `/api/v1/sensor/`, `/api/v1/device/`, `/api/v1/recommendation/`), SQLite database with Alembic migrations, trained XGBoost Irrigation model (`ai/models/irrigation/model.joblib`), MQTT message parser & persistence bridge, React dashboard UI, device control & audit logging.
+- **Demo / Fallback Services**: Weather (`/weather/current`), Market Prices (`/market/prices`), Crop Advisory, and Govt Schemes are currently served via structured fallbacks/demo providers as real external API credentials are not set.
+- **Hardware / Docker Unverified Notice**: Physical ESP32 hardware flashing and Docker container execution are unverified due to lack of connected physical microcontroller and Docker daemon in local dev environment. ESP32 firmware source code and `docker-compose.yml` are source-level verified and topic-contract aligned.
 
 ---
 
@@ -104,38 +118,39 @@ IoT Sensors → Real-time Data → AI Decision Engine → Explainable Recommenda
   ┌───────────────────────────────────────────────────────────────────────────┐
   │  LAYER 1: DATA COLLECTION                                                  │
   │                                                                             │
-  │   [ESP32 + Sensors]          [External APIs]          [User Input]         │
-  │   ├── Soil Moisture          ├── OpenWeatherMap        ├── Crop Selection   │
-  │   ├── Temperature (DHT22)    ├── AgMarket Prices       ├── Farm Profile     │
-  │   ├── Humidity (DHT22)       ├── Govt Schemes API      └── Location         │
-  │   ├── Rain Sensor            └── Disaster Alert API                         │
-  │   └── Water Level                                                            │
+  │   [ESP32 / Simulated Device]   [Fallback / Demo APIs]   [Manual Inputs]     │
+  │   ├── Soil Moisture            ├── Weather (Demo)       ├── Temperature     │
+  │   ├── Temperature (DHT22)      ├── Market Prices (Demo) ├── Soil Moisture   │
+  │   ├── Humidity (DHT22)         └── Schemes (Demo)       ├── Humidity        │
+  │   ├── Rain Sensor                                       └── Prev Rainfall   │
+  │   └── Water Level                                                           │
   └───────────────────────────────────────────────────────────────────────────┘
-                │ MQTT over WiFi                   │ REST / WebSocket
-                ▼                                  ▼
+                │ MQTT over WiFi / REST Ingestion                  │ REST API
+                ▼                                                  ▼
   ┌───────────────────────────────────────────────────────────────────────────┐
-  │  LAYER 2: BACKEND (FastAPI)                                                │
+  │  LAYER 2: BACKEND (FastAPI + Async SQLAlchemy)                            │
   │                                                                             │
   │   ┌──────────────┐   ┌──────────────┐   ┌──────────────┐                  │
-  │   │  IoT Service  │   │ Data Ingestion│   │ External API  │                  │
-  │   │  (MQTT Sub)   │   │  Pipeline    │   │  Aggregator   │                  │
+  │   │  IoT Service  │   │ Sensor API   │   │ External API │                  │
+  │   │ (MQTT Bridge)│   │  Ingestion   │   │ Fallback Agg │                  │
   │   └──────┬───────┘   └──────┬───────┘   └──────┬───────┘                  │
   │          └──────────────────┼──────────────────┘                           │
   │                             ▼                                               │
   │   ┌─────────────────────────────────────────────────────────┐              │
   │   │              AI Decision Engine                          │              │
-  │   │   ┌────────────┐  ┌────────────┐  ┌────────────┐        │              │
-  │   │   │Crop Advisor│  │ Irrigation │  │  Market    │        │              │
-  │   │   │  (XGBoost) │  │  Planner   │  │  Analyst   │        │              │
-  │   │   └────────────┘  └────────────┘  └────────────┘        │              │
-  │   │   ┌────────────┐  ┌─────────────────────────────┐        │              │
-  │   │   │ Scheme     │  │ Explainability Engine (SHAP) │        │              │
-  │   │   │ Matcher    │  └─────────────────────────────┘        │              │
-  │   │   └────────────┘                                         │              │
+  │   │   ┌────────────────────────────┐  ┌────────────────────┐ │              │
+  │   │   │ Irrigation Model (XGBoost) │  │ Explainability     │ │              │
+  │   │   │  (model.joblib trained)    │  │ (Feature weights & │ │              │
+  │   │   │                            │  │  Confidence Score) │ │              │
+  │   │   └────────────────────────────┘  └────────────────────┘ │              │
+  │   │   ┌────────────────────────────────────────────────────┐ │              │
+  │   │   │ Fallback / Demo Modules (Crop Advisory, Market,    │ │              │
+  │   │   │ Scheme Finder — labeled as Demo/Planned)           │ │              │
+  │   │   └────────────────────────────────────────────────────┘ │              │
   │   └─────────────────────────────────────────────────────────┘              │
   │                             │                                               │
   │   ┌──────────────────────── ▼─────────────────────────┐                   │
-  │   │              PostgreSQL + Redis Cache              │                   │
+  │   │            SQLite Database (aiosqlite + Alembic)  │                   │
   │   └────────────────────────────────────────────────────┘                   │
   └───────────────────────────────────────────────────────────────────────────┘
                                   │ REST API + WebSocket
@@ -150,18 +165,44 @@ IoT Sensors → Real-time Data → AI Decision Engine → Explainable Recommenda
   └───────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Data Flow
+### Data Flow & Component Architecture
 
 ```
-Sensor Reading → MQTT Publish → FastAPI MQTT Subscriber → Validate & Store (PostgreSQL)
-                                         ↓
-                            Trigger AI Decision Engine
-                                         ↓
-              [Crop Model + Irrigation Model + Market Model + Scheme Matcher]
-                                         ↓
-                           Generate Recommendations + SHAP Explanations
-                                         ↓
-                     Store to DB → Push via WebSocket → Dashboard
+                    FARMER
+                      │
+                      ▼
+              React Dashboard
+                      │
+                  REST/JWT
+                      │
+                      ▼
+               FastAPI Backend
+                /     |      \
+               /      |       \
+              ▼       ▼        ▼
+          SQLite    XGBoost    MQTT Bridge
+             ▲         │        │
+             │         ▼        ▼
+             │    Recommendation ESP32 / Device
+             │         │        │
+             └─────────┘     Sensors
+                               │
+                               ▼
+                         Telemetry
+```
+
+```
+Sensor Reading / Input → MQTT / REST Ingestion → FastAPI Validation → SQLite Persistence
+                                        ↓
+                         Trigger XGBoost AI Irrigation Model
+                                        ↓
+                Feature Preprocessing & Predict Inference
+                                        ↓
+          Generate Recommendation + Confidence Score + Reasoning Explanation
+                                        ↓
+     Persist Recommendation & History → Frontend Dashboard & Manual Relay Control
+                                        ↓
+     Farmer Action → Control API → Audit Log & MQTT Command Publish → ESP32 Relay
 ```
 
 ---
@@ -343,20 +384,17 @@ AgriGuardian-AI/                          ← Monorepo Root
 ### Database & Caching
 | Technology | Purpose |
 |---|---|
-| PostgreSQL 16 | Primary relational database |
-| Redis 7 | Session cache, pub/sub, task broker |
-| TimescaleDB (ext) | Time-series sensor data optimization |
+| SQLite + aiosqlite | Primary relational database (local MVP development stack) |
+| PostgreSQL 16 | (Planned) Production database target |
 
 ### AI / ML
 | Library | Purpose |
 |---|---|
-| Scikit-learn | Classification, preprocessing pipelines |
-| XGBoost | Crop & irrigation gradient boosting models |
-| Pandas | Data manipulation & feature engineering |
-| NumPy | Numerical computations |
-| SHAP | Explainable AI — feature importance |
-| Joblib | Model serialization |
-| MLflow | (Future) Experiment tracking |
+| XGBoost | Trained gradient boosting model for Irrigation recommendation (`ai/models/irrigation/model.joblib`) |
+| Scikit-learn | Preprocessing and model pipeline utilities |
+| NumPy | Feature vector construction and normalization |
+| Joblib | Model serialization & singleton loading |
+| SHAP / CNN | (Planned/Future) Advanced explainability and image disease classification |
 
 ### IoT / Hardware
 | Component | Purpose |

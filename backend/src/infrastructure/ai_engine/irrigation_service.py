@@ -99,17 +99,22 @@ def predict_irrigation(
         confidence = float(proba[prediction])
 
     moisture_display = soil_moisture if soil_moisture > 1.0 else moisture_norm * 100.0
+    rain_label = "no recent rainfall" if rainfall_prev_day < 2 else f"{rainfall_prev_day:.1f} mm rainfall yesterday"
+    humidity_label = "low" if humidity < 40 else ("high" if humidity > 75 else "moderate")
+
     if prediction == 1:
         recommendation = "IRRIGATE NOW"
         reason = (
-            f"Soil moisture at {moisture_display:.1f}% with temperature {temperature:.1f}°C. "
-            "Model indicates irrigation is recommended."
+            f"Soil moisture is low at {moisture_display:.1f}% (optimal: 45–70%). "
+            f"Temperature is {temperature:.1f}°C with {humidity_label} humidity ({humidity:.0f}%) and {rain_label}. "
+            "XGBoost model recommends irrigation to prevent crop stress."
         )
     else:
         recommendation = "SKIP IRRIGATION"
         reason = (
-            f"Soil moisture at {moisture_display:.1f}% with temperature {temperature:.1f}°C. "
-            "Soil moisture level appears adequate."
+            f"Soil moisture is adequate at {moisture_display:.1f}%. "
+            f"Temperature is {temperature:.1f}°C with {humidity_label} humidity ({humidity:.0f}%) and {rain_label}. "
+            "XGBoost model indicates sufficient moisture — irrigation not required."
         )
 
     return {

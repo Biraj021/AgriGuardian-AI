@@ -49,6 +49,12 @@ async def seed_data() -> None:
         elif device.farm_id != farm.id:
             raise RuntimeError("Demo device MAC is already assigned to a different farm")
 
+        esp_device = (await session.execute(select(Device).where(Device.mac_address == "agriguardian-esp32-001"))).scalars().first()
+        if esp_device is None:
+            esp_device = Device(farm_id=farm.id, mac_address="agriguardian-esp32-001", status="active")
+            session.add(esp_device)
+            await session.flush()
+
         reading_count = await session.scalar(select(func.count()).select_from(SensorReading).where(SensorReading.device_id == device.id))
         if reading_count == 0:
             now = datetime.now(timezone.utc)

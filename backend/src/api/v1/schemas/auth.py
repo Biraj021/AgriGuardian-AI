@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 class Token(BaseModel):
     access_token: str
@@ -21,10 +21,9 @@ class UserCreate(BaseModel):
 import uuid
 
 class UserResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: uuid.UUID | str
     email: EmailStr
     role: str
     is_active: bool
-
-    class Config:
-        from_attributes = True

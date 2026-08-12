@@ -1,3 +1,0 @@
-# Legacy location — do not use this file for the active Arduino sketch.
-# Use: ../firmware/agriguardian_esp32/config.h.example
-# The active sketch includes config.h from its own folder.
