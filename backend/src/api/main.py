@@ -13,6 +13,7 @@ from src.api.v1.routers import (
     health,
     market,
     recommendation,
+    schemes,
     sensor,
     weather,
 )
@@ -56,6 +57,7 @@ app.include_router(sensor.router, prefix="/api/v1/sensor", tags=["sensor"])
 app.include_router(device.router, prefix="/api/v1/device", tags=["device"])
 app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["analytics"])
 app.include_router(crop_analysis.router, prefix="/api/v1/crop-analysis", tags=["crop-analysis"])
+app.include_router(schemes.router, prefix="/api/v1/schemes", tags=["schemes"])
 
 @app.get("/health")
 def root_health():

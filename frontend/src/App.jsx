@@ -33,6 +33,7 @@ import AnalyticsPage from './pages/Analytics';
 import FarmManagement from './pages/FarmManagement';
 import DeviceStatus from './pages/DeviceStatus';
 import IrrigationControl from './pages/IrrigationControl';
+import SchemesPage from './pages/Schemes';
 import NotImplementedPage from './pages/NotImplemented';
 
 function App() {
@@ -51,7 +52,7 @@ function App() {
                   <Route path="/weather" element={<WeatherPage />} />
                   <Route path="/market" element={<MarketPage />} />
                   <Route path="/alerts" element={<AlertsPage />} />
-                  <Route path="/schemes" element={<NotImplementedPage title="Government Schemes" />} />
+                  <Route path="/schemes" element={<SchemesPage />} />
                   <Route path="/analytics" element={<AnalyticsPage />} />
                   <Route path="/farm-management" element={<FarmManagement />} />
                   <Route path="/irrigation" element={<IrrigationControl />} />

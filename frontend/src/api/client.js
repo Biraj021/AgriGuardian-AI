@@ -195,3 +195,21 @@ export async function getCropAnalysisHistoryApi(limit = 20) {
   return apiFetch(`/crop-analysis/history?limit=${limit}`);
 }
 
+export async function getSchemesApi(params = {}) {
+  const query = new URLSearchParams();
+  if (params.category && params.category !== 'All') query.append('category', params.category);
+  if (params.state && params.state !== 'All') query.append('state', params.state);
+  if (params.crop && params.crop !== 'All') query.append('crop', params.crop);
+  if (params.search) query.append('search', params.search);
+
+  const qs = query.toString();
+  return apiFetch(`/schemes/${qs ? `?${qs}` : ''}`);
+}
+
+export async function checkSchemeEligibilityApi(profile = {}) {
+  return apiFetch('/schemes/check-eligibility', {
+    method: 'POST',
+    body: JSON.stringify(profile),
+  });
+}
+
