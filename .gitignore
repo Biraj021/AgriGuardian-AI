@@ -70,8 +70,14 @@ coverage/
 # Database
 *.sqlite
 *.sqlite3
+*.db
+agri_guardian.db
 database/backups/*.sql
 database/backups/*.dump
+
+# User Uploads / Media
+backend/uploads/crop_analysis/*
+!backend/uploads/crop_analysis/.gitkeep
 
 # Docker
 .docker/
