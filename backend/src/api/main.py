@@ -6,6 +6,7 @@ from src.api.v1.routers import (
     alerts,
     analytics,
     auth,
+    crop_analysis,
     dashboard,
     device,
     farm,
@@ -54,6 +55,7 @@ app.include_router(alerts.router, prefix="/api/v1/alerts", tags=["alerts"])
 app.include_router(sensor.router, prefix="/api/v1/sensor", tags=["sensor"])
 app.include_router(device.router, prefix="/api/v1/device", tags=["device"])
 app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["analytics"])
+app.include_router(crop_analysis.router, prefix="/api/v1/crop-analysis", tags=["crop-analysis"])
 
 @app.get("/health")
 def root_health():

@@ -24,6 +24,7 @@ function ProtectedRoute({ children }) {
 }
 
 import Recommendations from './pages/Recommendations';
+import CropHealthAnalysis from './pages/CropHealthAnalysis';
 import WeatherPage from './pages/Weather';
 import MarketPage from './pages/Market';
 import ProfilePage from './pages/Profile';
@@ -46,6 +47,7 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/recommendations" element={<Recommendations />} />
+                  <Route path="/crop-health" element={<CropHealthAnalysis />} />
                   <Route path="/weather" element={<WeatherPage />} />
                   <Route path="/market" element={<MarketPage />} />
                   <Route path="/alerts" element={<AlertsPage />} />

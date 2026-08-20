@@ -18,6 +18,7 @@ class Farm(Base):
     owner: Mapped["User"] = relationship("User", back_populates="farms")
     devices: Mapped[list["Device"]] = relationship("Device", back_populates="farm", cascade="all, delete-orphan")
     recommendations: Mapped[list["Recommendation"]] = relationship("Recommendation", back_populates="farm", cascade="all, delete-orphan")
+    crop_analyses: Mapped[list["CropAnalysis"]] = relationship("CropAnalysis", back_populates="farm", cascade="all, delete-orphan")
 
     # Composite Index for finding active farms of a user
     __table_args__ = (

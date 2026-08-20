@@ -6,6 +6,7 @@ import { dashboardMockData } from '../../services/mockData';
 import { 
   MdDashboard, 
   MdPsychology, 
+  MdCropOriginal,
   MdWbSunny, 
   MdStorefront, 
   MdWarning, 
@@ -21,6 +22,7 @@ import {
 const navItems = [
   { path: '/', label: 'Dashboard', icon: MdDashboard },
   { path: '/recommendations', label: 'AI Recommendations', icon: MdPsychology },
+  { path: '/crop-health', label: 'Crop Health AI', icon: MdCropOriginal },
   { path: '/weather', label: 'Weather', icon: MdWbSunny },
   { path: '/market', label: 'Market Prices', icon: MdStorefront },
   { path: '/alerts', label: 'Disaster Alerts', icon: MdWarning },

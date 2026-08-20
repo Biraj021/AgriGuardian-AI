@@ -156,3 +156,42 @@ export async function controlDeviceApi(deviceId, command, duration_seconds = nul
   });
 }
 
+export async function analyzeCropImageApi(formData) {
+  const token = localStorage.getItem('agriguardian_token');
+  const headers = {};
+  if (token) {
+    headers['Authorization'] = 'Bearer ' + token;
+  }
+
+  let response;
+  try {
+    response = await fetch(`${API_BASE}/crop-analysis/analyze`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+  } catch {
+    throw new ApiError(
+      'Cannot reach the backend at 127.0.0.1:8000. Start the server with: uvicorn src.api.main:app --reload',
+      0
+    );
+  }
+
+  if (!response.ok) {
+    let data = null;
+    try {
+      data = await response.json();
+    } catch {
+      // JSON parse fallback
+    }
+    const errorMsg = parseErrorMessage(data, response.status, 'Image analysis failed.');
+    throw new ApiError(errorMsg, response.status);
+  }
+
+  return response.json();
+}
+
+export async function getCropAnalysisHistoryApi(limit = 20) {
+  return apiFetch(`/crop-analysis/history?limit=${limit}`);
+}
+
