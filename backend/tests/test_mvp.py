@@ -336,3 +336,16 @@ def test_irrigation_service_loads_model():
     )
     assert result["prediction"] in (0, 1)
     assert result["model_type"] == "XGBClassifier"
+
+
+def test_model_status_endpoint(client):
+    async def _test():
+        response = await client.get("/api/v1/recommendation/model/status")
+        assert response.status_code == 200
+        body = response.json()
+        assert body["available"] is True
+        assert body["model"] == "XGBoost"
+        assert body["model_version"] == "irrigation-xgboost-v1"
+        assert body["features"] == ["temperature", "humidity", "soil_moisture", "rainfall_prev_day"]
+
+    _run(_test())

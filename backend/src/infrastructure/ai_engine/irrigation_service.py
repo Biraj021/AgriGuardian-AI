@@ -133,3 +133,22 @@ def predict_irrigation(
         "reason": reason,
         "model_type": type(model).__name__,
     }
+
+
+def get_model_status_info() -> dict[str, Any]:
+    """Return status and details of the loaded irrigation model."""
+    try:
+        model = get_irrigation_model()
+        model_type = type(model).__name__
+        available = True
+    except Exception:
+        available = False
+        model_type = "None"
+
+    return {
+        "available": available,
+        "model": "XGBoost" if "XGB" in model_type else model_type,
+        "model_type": model_type,
+        "model_version": "irrigation-xgboost-v1",
+        "features": list(FEATURE_ORDER),
+    }

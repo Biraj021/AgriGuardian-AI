@@ -26,6 +26,13 @@ function ProtectedRoute({ children }) {
 import Recommendations from './pages/Recommendations';
 import WeatherPage from './pages/Weather';
 import MarketPage from './pages/Market';
+import ProfilePage from './pages/Profile';
+import AlertsPage from './pages/Alerts';
+import AnalyticsPage from './pages/Analytics';
+import FarmManagement from './pages/FarmManagement';
+import DeviceStatus from './pages/DeviceStatus';
+import IrrigationControl from './pages/IrrigationControl';
+import NotImplementedPage from './pages/NotImplemented';
 
 function App() {
   return (
@@ -41,9 +48,14 @@ function App() {
                   <Route path="/recommendations" element={<Recommendations />} />
                   <Route path="/weather" element={<WeatherPage />} />
                   <Route path="/market" element={<MarketPage />} />
-                  <Route path="/alerts" element={<div className="p-6 text-gray-600">Disaster alerts are not implemented in this MVP.</div>} />
-                  <Route path="/schemes" element={<div className="p-6 text-gray-600">Government schemes are not implemented in this MVP.</div>} />
-                  <Route path="/profile" element={<div className="p-6 text-gray-600">Profile management is not implemented in this MVP.</div>} />
+                  <Route path="/alerts" element={<AlertsPage />} />
+                  <Route path="/schemes" element={<NotImplementedPage title="Government Schemes" />} />
+                  <Route path="/analytics" element={<AnalyticsPage />} />
+                  <Route path="/farm-management" element={<FarmManagement />} />
+                  <Route path="/irrigation" element={<IrrigationControl />} />
+                  <Route path="/device-status" element={<DeviceStatus />} />
+                  <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="*" element={<NotImplementedPage title="Page Not Found" />} />
                 </Routes>
               </LayoutWrapper>
             </ProtectedRoute>

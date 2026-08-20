@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { getDashboardApi, getWeatherApi } from '../../api/client';
+import { dashboardMockData } from '../../services/mockData';
 import { 
   MdDashboard, 
   MdPsychology, 
@@ -35,9 +37,30 @@ export default function Sidebar({ isOpen, setIsOpen }) {
 
   // Live clock
   const [now, setNow] = useState(new Date());
+  const [farmData, setFarmData] = useState(null);
+  const [weatherData, setWeatherData] = useState(null);
+
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    async function loadSidebarData() {
+      try {
+        const dashboardRes = await getDashboardApi();
+        setFarmData(dashboardRes.farm || dashboardMockData);
+      } catch (e) {
+        setFarmData(dashboardMockData);
+      }
+      try {
+        const weatherRes = await getWeatherApi();
+        setWeatherData(weatherRes);
+      } catch (e) {
+        setWeatherData(dashboardMockData.environmentalIntel.weather);
+      }
+    }
+    loadSidebarData();
   }, []);
 
   const dateString = now.toLocaleDateString('en-IN', {
@@ -109,8 +132,8 @@ export default function Sidebar({ isOpen, setIsOpen }) {
               <span className="text-xl">🏡</span>
               <div className="overflow-hidden">
                 <p className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Selected Farm</p>
-                <p className="text-[12px] font-semibold text-gray-800 truncate">Farm selection is not implemented</p>
-                <p className="text-[10px] text-amber-600">No static farm data shown</p>
+                <p className="text-[12px] font-semibold text-gray-800 truncate">{farmData ? (farmData.name || farmData.farmName) : 'Loading...'}</p>
+                <p className="text-[10px] text-green-600">{farmData ? (farmData.size_acres ? `${farmData.size_acres} Acres` : farmData.farmSize) : ''}</p>
               </div>
             </div>
             <MdKeyboardArrowDown className="text-gray-400 w-5 h-5" />
@@ -122,13 +145,13 @@ export default function Sidebar({ isOpen, setIsOpen }) {
               <div className="flex items-center gap-2">
                 <span className="text-2xl">☀️</span>
                 <div>
-                  <p className="text-lg font-bold text-gray-800 leading-none">32°C</p>
-                  <p className="text-[10px] text-gray-400 font-medium mt-0.5">Sunny</p>
+                  <p className="text-lg font-bold text-gray-800 leading-none">{weatherData ? (weatherData.currentTemp || weatherData.temperature) : '--'}°C</p>
+                  <p className="text-[10px] text-gray-400 font-medium mt-0.5">{weatherData?.condition || 'Sunny'}</p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-[11px] font-semibold text-gray-700">Location unavailable</p>
-                <p className="text-[9px] text-gray-400">Configure on farm profile</p>
+                <p className="text-[11px] font-semibold text-gray-700 truncate max-w-[80px]">{farmData ? (farmData.location || farmData.location) : 'Unavailable'}</p>
+                <p className="text-[9px] text-gray-400">{weatherData?.is_live ? 'Live Data' : 'Demo Data'}</p>
               </div>
             </div>
             <div className="flex items-center justify-between pt-2 border-t border-gray-100 text-[10px] text-gray-500 font-medium">

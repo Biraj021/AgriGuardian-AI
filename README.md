@@ -287,22 +287,27 @@ AgriGuardian-AI/                          ← Monorepo Root
 │   ├── tailwind.config.js
 │   └── Dockerfile
 │
-├── ai/                                   ← AI / ML Engine
+├── ai/                                   ← Real AI / ML Engine (XGBoost)
 │   ├── models/
-│   │   ├── crop_advisory/                ← Crop recommendation model (XGBoost)
-│   │   ├── irrigation/                   ← Irrigation decision model
-│   │   ├── market/                       ← Market sell/hold model
-│   │   └── disease_detection/            ← (Future) CNN-based disease detection
+│   │   └── irrigation/                   ← Trained XGBoost model & metadata
+│   │       ├── model.joblib              ← Serialized model artifact
+│   │       ├── metadata.json             ← Version, metrics & features metadata
+│   │       └── README.md
 │   ├── data/
-│   │   ├── raw/                          ← Original unprocessed datasets
-│   │   ├── processed/                    ← Cleaned, feature-engineered datasets
-│   │   └── external/                     ← Third-party datasets (soil, weather history)
-│   ├── notebooks/                        ← Jupyter notebooks for EDA & prototyping
-│   ├── pipelines/                        ← Training & inference pipeline scripts
-│   ├── evaluation/                       ← Model metrics, confusion matrices, reports
-│   ├── explainability/                   ← SHAP explainer scripts and outputs
-│   ├── registry/                         ← Saved trained model artifacts (.pkl, .joblib)
-│   └── tests/                            ← AI model unit and integration tests
+│   │   ├── raw/                          ← Raw synthetic dataset
+│   │   └── processed/                    ← Processed feature data
+│   ├── training/
+│   │   └── train_irrigation_model.py     ← Reproducible XGBoost training pipeline
+│   ├── inference/
+│   │   └── irrigation_predictor.py       ← Validated inference engine wrapper
+│   ├── evaluation/
+│   │   └── evaluate_irrigation_model.py   ← Model evaluation & benchmark suite
+│   ├── explainability/
+│   │   └── explanation.py                ← Deterministic human-readable explanations
+│   ├── tests/
+│   │   └── test_irrigation_model.py       ← Model unit tests & benchmark sanity checks
+│   └── README.md
+
 │
 ├── database/                             ← Database management
 │   ├── migrations/                       ← SQL migration scripts (managed by Alembic)

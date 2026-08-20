@@ -8,6 +8,7 @@ import {
   getMarketApi,
   getAnalyticsApi,
   getRecommendationHistoryApi,
+  getAlertsApi,
 } from '../../api/client';
 import Skeleton from '../../components/common/Skeleton';
 import HeroRecommendationCard from '../../components/cards/HeroRecommendationCard';
@@ -46,6 +47,8 @@ export default function Dashboard() {
   const [backendError, setBackendError] = useState(null);
   const [weatherIsDemo, setWeatherIsDemo] = useState(true);
   const [marketIsDemo, setMarketIsDemo] = useState(true);
+  const [alerts, setAlerts] = useState([]);
+  const [alertsIsDemo, setAlertsIsDemo] = useState(true);
 
   const [soilMoisture, setSoilMoisture] = useState(25.0);
   const [temperature, setTemperature] = useState(32.0);
@@ -96,6 +99,26 @@ export default function Dashboard() {
         setMarketIsDemo(marketRes.source === 'demo' || !marketRes.is_live);
       } catch {
         setMarketIsDemo(true);
+      }
+      
+      try {
+        const alertsRes = await getAlertsApi();
+        setAlertsIsDemo(alertsRes.source === 'demo' || !alertsRes.is_live);
+        if (alertsRes.alerts) {
+          const mappedAlerts = alertsRes.alerts.map(a => ({
+            type: a.title,
+            description: a.description,
+            dateRange: new Date(a.issued_at).toLocaleDateString(),
+            status: a.severity === 'high' ? 'High Risk' : a.severity === 'medium' ? 'Moderate Risk' : 'Low Risk',
+            severity: a.severity === 'high' ? 'danger' : a.severity === 'medium' ? 'warning' : 'warning',
+          }));
+          setAlerts(mappedAlerts);
+        } else {
+          setAlerts(dashboardMockData.environmentalIntel.alerts);
+        }
+      } catch {
+        setAlertsIsDemo(true);
+        setAlerts(dashboardMockData.environmentalIntel.alerts);
       } finally {
         setLoading(false);
       }
@@ -312,8 +335,8 @@ export default function Dashboard() {
           isDemo={weatherIsDemo}
         />
         <div>
-          <p className="mb-2 text-xs font-semibold text-amber-700">Demo Data — live alerts are not implemented in MVP.</p>
-          <DisasterAlerts alerts={dashboardMockData.environmentalIntel.alerts} />
+          {alertsIsDemo && <p className="mb-2 text-xs font-semibold text-amber-700">Demo Data — Live alerts are disabled.</p>}
+          <DisasterAlerts alerts={alerts} />
         </div>
       </div>
 

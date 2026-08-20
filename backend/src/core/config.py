@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     MQTT_BROKER_PORT: int = 1883
     MQTT_USERNAME: str | None = None
     MQTT_PASSWORD: str | None = None
-    CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
+    CORS_ORIGINS: str = "http://127.0.0.1:5173,http://localhost:5173,http://127.0.0.1:4173,http://localhost:4173,http://127.0.0.1:3000,http://localhost:3000"
 
     AI_MODEL_PATH: str = str(BACKEND_DIR.parent / "ai" / "models")
     AI_PREDICTION_THRESHOLD: float = 0.75

@@ -5,10 +5,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.dependencies import get_current_user, get_db_session
 from src.core.domain.entities import UserEntity
-from src.infrastructure.ai_engine.irrigation_service import predict_irrigation
+from src.infrastructure.ai_engine.irrigation_service import get_model_status_info, predict_irrigation
 from src.infrastructure.database.models import Device, Farm, Recommendation, SensorReading
 
 router = APIRouter()
+
+
+@router.get("/model/status")
+async def get_model_status():
+    """Return status and metadata of the deployed irrigation AI model."""
+    return get_model_status_info()
+
 
 
 class IrrigationInput(BaseModel):

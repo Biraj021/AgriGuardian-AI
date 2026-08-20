@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
 
 export class ApiError extends Error {
   constructor(message, status = 0) {
@@ -6,6 +6,19 @@ export class ApiError extends Error {
     this.name = 'ApiError';
     this.status = status;
   }
+}
+
+function parseErrorMessage(data, status, defaultText) {
+  let msg = data?.detail || data?.message || defaultText;
+  if (Array.isArray(msg)) {
+    msg = msg.map((e) => e.msg || JSON.stringify(e)).join(', ');
+  }
+  if (status === 401 && !data?.detail) return 'Authentication failed. Please check your credentials.';
+  if (status === 403 && !data?.detail) return 'Access denied. You do not own this farm or device.';
+  if (status === 404 && !data?.detail) return 'Requested resource or sensor reading not found.';
+  if (status === 422 && !data?.detail) return 'Request validation failed. Check input values.';
+  if (status === 503 && !data?.detail) return 'Backend service unavailable.';
+  return msg;
 }
 
 export async function apiFetch(endpoint, options = {}) {
@@ -25,24 +38,21 @@ export async function apiFetch(endpoint, options = {}) {
       ...options,
       headers,
     });
-  } catch (err) {
+  } catch {
     throw new ApiError(
-      'Cannot reach the backend. Make sure the FastAPI server is running on port 8000.',
+      'Cannot reach the backend at 127.0.0.1:8000. Ensure server is running: uvicorn src.api.main:app --reload',
       0
     );
   }
 
   if (!response.ok) {
-    let errorMsg = 'An error occurred';
+    let data = null;
     try {
-      const data = await response.json();
-      errorMsg = data.detail || data.message || errorMsg;
-      if (Array.isArray(errorMsg)) {
-        errorMsg = errorMsg.map((e) => e.msg || JSON.stringify(e)).join(', ');
-      }
+      data = await response.json();
     } catch {
-      errorMsg = response.statusText || errorMsg;
+      // JSON parse fallback
     }
+    const errorMsg = parseErrorMessage(data, response.status, response.statusText || 'An error occurred');
     throw new ApiError(errorMsg, response.status);
   }
 
@@ -65,24 +75,25 @@ export async function loginApi(email, password) {
     });
   } catch {
     throw new ApiError(
-      'Cannot reach the backend. Start the server with: uvicorn src.api.main:app --reload',
+      'Cannot reach the backend at 127.0.0.1:8000. Start the server with: uvicorn src.api.main:app --reload',
       0
     );
   }
 
   if (!response.ok) {
-    let errorMsg = 'Incorrect email or password';
+    let data = null;
     try {
-      const data = await response.json();
-      errorMsg = data.detail || errorMsg;
+      data = await response.json();
     } catch {
-      errorMsg = response.statusText || errorMsg;
+      // fallback
     }
+    const errorMsg = parseErrorMessage(data, response.status, 'Incorrect email or password');
     throw new ApiError(errorMsg, response.status);
   }
 
   return response.json();
 }
+
 
 export async function registerApi(email, password, role = 'farmer') {
   return apiFetch('/auth/register', {
@@ -133,3 +144,15 @@ export async function getAnalyticsApi() {
 export async function getRecommendationHistoryApi() {
   return apiFetch('/recommendation/history');
 }
+
+export async function getAlertsApi() {
+  return apiFetch('/alerts/');
+}
+
+export async function controlDeviceApi(deviceId, command, duration_seconds = null) {
+  return apiFetch(`/device/${deviceId}/control`, {
+    method: 'POST',
+    body: JSON.stringify({ command, duration_seconds }),
+  });
+}
+
