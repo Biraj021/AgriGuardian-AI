@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     AGMARKET_API_KEY: str | None = None
     INDIA_GOV_API_KEY: str | None = None
     DISASTER_ALERT_API_KEY: str | None = None
+    GEMINI_API_KEY: str | None = None
+    GEMINI_VISION_MODEL: str = "gemini-2.5-flash"
+    GEMINI_TIMEOUT_SECONDS: float = 25.0
 
     MQTT_BROKER_HOST: str | None = None
     MQTT_BROKER_PORT: int = 1883

@@ -1,4 +1,4 @@
-﻿"""
+"""
 CropAnalysis database model.
 
 Stores results of crop image analysis requests.
@@ -51,7 +51,21 @@ class CropAnalysis(Base):
     image_width: Mapped[int | None] = mapped_column(nullable=True)
     image_height: Mapped[int | None] = mapped_column(nullable=True)
 
-    # Analysis output (stored as JSON lists/dicts)
+    # Multimodal Vision Analysis Fields
+    image_relevant: Mapped[bool | None] = mapped_column(nullable=True, default=True)
+    relevance_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    image_quality: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    image_quality_issues: Mapped[list[Any] | None] = mapped_column(JSON, nullable=True)
+    crop: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    plant_part: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    overall_condition: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    possible_issues: Mapped[list[Any] | None] = mapped_column(JSON, nullable=True)
+    severity: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    recommendations: Mapped[list[Any] | None] = mapped_column(JSON, nullable=True)
+    next_photo_tip: Mapped[str | None] = mapped_column(Text, nullable=True)
+    uncertainties: Mapped[list[Any] | None] = mapped_column(JSON, nullable=True)
+
+    # Legacy & image-level measurements (stored as JSON lists/dicts)
     quality_notes: Mapped[list[Any] | None] = mapped_column(JSON, nullable=True)
     vegetation_proxy: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     observations: Mapped[list[Any] | None] = mapped_column(JSON, nullable=True)

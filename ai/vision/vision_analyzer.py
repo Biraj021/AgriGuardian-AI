@@ -1,4 +1,4 @@
-﻿"""
+"""
 VisionAnalyzer — Abstract Base Class for Crop Image Analysis.
 
 This interface allows AgriGuardian to swap in a real trained crop-disease
@@ -28,56 +28,41 @@ from typing import Any
 class VisionResult:
     """
     Structured output of a crop image analysis.
-
-    Fields
-    ------
-    analysis_type : str
-        Always "prototype_visual_analysis" until a trained model replaces this.
-    model_status : str
-        "no_trained_crop_disease_model" for the prototype.
-        Set to "trained_model_active" when a real model is used.
-    image_valid : bool
-        Whether the image was readable and well-formed.
-    image_format : str | None
-        Detected image format (JPEG, PNG, WEBP, …).
-    width : int | None
-        Image width in pixels.
-    height : int | None
-        Image height in pixels.
-    quality_notes : list[str]
-        Objective quality observations (resolution, brightness, etc.).
-    vegetation_proxy : dict[str, Any]
-        Heuristic green-pixel ratio and related measurements.
-        Labeled as a proxy observation — NOT a diagnostic result.
-    observations : list[str]
-        Plain-language heuristic observations labeled as such.
-    disclaimer : str
-        Mandatory disclaimer that must appear in every API response.
-    model_name : str
-        Name of the analyzer used.
-    model_version : str
-        Version string of the analyzer.
-    raw_metrics : dict[str, Any]
-        Any additional raw numeric measurements.
     """
-    analysis_type: str = "prototype_visual_analysis"
-    model_status: str = "no_trained_crop_disease_model"
+    analysis_type: str = "multimodal_vision_ai"
+    model_status: str = "trained_model_active"
     image_valid: bool = False
     image_format: str | None = None
     width: int | None = None
     height: int | None = None
+    
+    # Multimodal Vision AI fields
+    image_relevant: bool = True
+    relevance_reason: str | None = None
+    image_quality: str = "Acceptable"  # "Good" | "Acceptable" | "Poor"
+    image_quality_issues: list[str] = field(default_factory=list)
+    crop: str = "Unknown"
+    plant_part: str | None = None
+    overall_condition: str = "Unknown"
+    observations: list[str] = field(default_factory=list)
+    possible_issues: list[dict[str, Any]] = field(default_factory=list)
+    severity: str = "Unknown"  # "Healthy / No obvious issue" | "Low" | "Moderate" | "High" | "Unknown"
+    recommendations: list[str] = field(default_factory=list)
+    next_photo_tip: str | None = None
+    uncertainties: list[str] = field(default_factory=list)
+
+    # Legacy/Prototype telemetry fields (kept for backward compatibility)
     quality_notes: list[str] = field(default_factory=list)
     vegetation_proxy: dict[str, Any] = field(default_factory=dict)
-    observations: list[str] = field(default_factory=list)
-    disclaimer: str = (
-        "PROTOTYPE — This analysis uses only basic image measurements. "
-        "No trained crop-disease machine-learning model is currently active. "
-        "These observations are NOT a crop-disease diagnosis. "
-        "Consult a qualified agricultural expert for disease identification."
-    )
-    model_name: str = "PrototypeVisionAnalyzer"
-    model_version: str = "prototype-v1"
     raw_metrics: dict[str, Any] = field(default_factory=dict)
+    
+    disclaimer: str = (
+        "This is AI-based visual guidance, not a confirmed agricultural or laboratory diagnosis. "
+        "Always inspect surrounding crops and consult local agricultural experts before applying treatments."
+    )
+    model_name: str = "GeminiVisionAnalyzer"
+    model_version: str = "gemini-2.5-flash"
+
 
 
 class VisionAnalyzer(ABC):

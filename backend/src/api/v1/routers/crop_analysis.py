@@ -1,4 +1,4 @@
-﻿"""
+"""
 Crop Image Analysis API router.
 
 Endpoints
@@ -186,6 +186,18 @@ async def analyze_crop(
         image_format=analysis_data.get("image_format"),
         image_width=analysis_data.get("width"),
         image_height=analysis_data.get("height"),
+        image_relevant=analysis_data.get("image_relevant", True),
+        relevance_reason=analysis_data.get("relevance_reason"),
+        image_quality=analysis_data.get("image_quality"),
+        image_quality_issues=analysis_data.get("image_quality_issues"),
+        crop=analysis_data.get("crop"),
+        plant_part=analysis_data.get("plant_part"),
+        overall_condition=analysis_data.get("overall_condition"),
+        possible_issues=analysis_data.get("possible_issues"),
+        severity=analysis_data.get("severity"),
+        recommendations=analysis_data.get("recommendations"),
+        next_photo_tip=analysis_data.get("next_photo_tip"),
+        uncertainties=analysis_data.get("uncertainties"),
         quality_notes=analysis_data.get("quality_notes"),
         vegetation_proxy=analysis_data.get("vegetation_proxy"),
         observations=analysis_data.get("observations"),
@@ -205,9 +217,21 @@ async def analyze_crop(
         image_format=record.image_format,
         width=record.image_width,
         height=record.image_height,
+        image_relevant=record.image_relevant if record.image_relevant is not None else True,
+        relevance_reason=record.relevance_reason,
+        image_quality=record.image_quality or "Acceptable",
+        image_quality_issues=record.image_quality_issues or [],
+        crop=record.crop or "Unknown",
+        plant_part=record.plant_part,
+        overall_condition=record.overall_condition or "Analyzed",
+        observations=record.observations or [],
+        possible_issues=record.possible_issues or [],
+        severity=record.severity or "Unknown",
+        recommendations=record.recommendations or [],
+        next_photo_tip=record.next_photo_tip,
+        uncertainties=record.uncertainties or [],
         quality_notes=record.quality_notes or [],
         vegetation_proxy=record.vegetation_proxy or {},
-        observations=record.observations or [],
         raw_metrics=record.raw_metrics or {},
         disclaimer=record.disclaimer,
         created_at=record.created_at.isoformat(),
@@ -225,7 +249,7 @@ async def get_crop_analysis_history(
     current_user: UserEntity = Depends(get_current_user),
 ):
     """
-    Get past crop image analyses for the authenticated user''s farm.
+    Get past crop image analyses for the authenticated user's farm.
     """
     farm = await _get_owned_farm(db, current_user)
 
@@ -249,9 +273,21 @@ async def get_crop_analysis_history(
             image_format=r.image_format,
             image_width=r.image_width,
             image_height=r.image_height,
+            image_relevant=r.image_relevant if r.image_relevant is not None else True,
+            relevance_reason=r.relevance_reason,
+            image_quality=r.image_quality,
+            image_quality_issues=r.image_quality_issues,
+            crop=r.crop,
+            plant_part=r.plant_part,
+            overall_condition=r.overall_condition,
+            observations=r.observations,
+            possible_issues=r.possible_issues,
+            severity=r.severity,
+            recommendations=r.recommendations,
+            next_photo_tip=r.next_photo_tip,
+            uncertainties=r.uncertainties,
             quality_notes=r.quality_notes,
             vegetation_proxy=r.vegetation_proxy,
-            observations=r.observations,
             raw_metrics=r.raw_metrics,
             disclaimer=r.disclaimer,
         )

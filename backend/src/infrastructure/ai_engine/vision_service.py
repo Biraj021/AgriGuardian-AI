@@ -1,4 +1,4 @@
-﻿"""
+"""
 Vision AI service for crop image analysis.
 
 This service loads the VisionAnalyzer implementation and exposes a clean
@@ -35,35 +35,33 @@ _ANALYZER: VisionAnalyzer | None = None
 def _get_analyzer() -> VisionAnalyzer:
     """
     Return the active VisionAnalyzer singleton.
-
-    Currently returns PrototypeVisionAnalyzer.
-    Replace this function body to switch to a trained model.
+    
+    Instantiates GeminiVisionAnalyzer if GEMINI_API_KEY is present,
+    otherwise falls back to PrototypeVisionAnalyzer for honest offline operation.
     """
     global _ANALYZER
     if _ANALYZER is not None:
         return _ANALYZER
 
-    from ai.vision.prototype_analyzer import PrototypeVisionAnalyzer
-    _ANALYZER = PrototypeVisionAnalyzer()
+    from src.core.config import settings
+
+    if settings.GEMINI_API_KEY:
+        from ai.vision.gemini_analyzer import GeminiVisionAnalyzer
+        _ANALYZER = GeminiVisionAnalyzer(
+            api_key=settings.GEMINI_API_KEY,
+            model_name=settings.GEMINI_VISION_MODEL,
+            timeout_seconds=settings.GEMINI_TIMEOUT_SECONDS,
+        )
+    else:
+        from ai.vision.prototype_analyzer import PrototypeVisionAnalyzer
+        _ANALYZER = PrototypeVisionAnalyzer()
+
     return _ANALYZER
 
 
 def analyze_crop_image(image_bytes: bytes) -> dict[str, Any]:
     """
     Run image analysis and return a serializable dict for the API layer.
-
-    Parameters
-    ----------
-    image_bytes : bytes
-        Raw image file bytes.
-
-    Returns
-    -------
-    dict
-        Serializable analysis result. Always includes:
-        - analysis_type: "prototype_visual_analysis"
-        - model_status: "no_trained_crop_disease_model"
-        - disclaimer: mandatory warning text
     """
     analyzer = _get_analyzer()
     result: VisionResult = analyzer.analyze(image_bytes)
@@ -79,9 +77,21 @@ def analyze_crop_image(image_bytes: bytes) -> dict[str, Any]:
         "image_format": result.image_format,
         "width": result.width,
         "height": result.height,
+        "image_relevant": result.image_relevant,
+        "relevance_reason": result.relevance_reason,
+        "image_quality": result.image_quality,
+        "image_quality_issues": result.image_quality_issues,
+        "crop": result.crop,
+        "plant_part": result.plant_part,
+        "overall_condition": result.overall_condition,
+        "observations": result.observations,
+        "possible_issues": result.possible_issues,
+        "severity": result.severity,
+        "recommendations": result.recommendations,
+        "next_photo_tip": result.next_photo_tip,
+        "uncertainties": result.uncertainties,
         "quality_notes": result.quality_notes,
         "vegetation_proxy": result.vegetation_proxy,
-        "observations": result.observations,
         "raw_metrics": result.raw_metrics,
         "disclaimer": result.disclaimer,
     }
@@ -89,13 +99,64 @@ def analyze_crop_image(image_bytes: bytes) -> dict[str, Any]:
 
 def get_vision_model_status() -> dict[str, Any]:
     """Return status information about the current vision analyzer."""
+    from src.core.config import settings
     analyzer = _get_analyzer()
+    is_gemini = "Gemini" in analyzer.name
+    configured = bool(settings.GEMINI_API_KEY)
+
+    sdk_version = "not installed"
+    sdk_installed = False
+    try:
+        from google import genai
+        sdk_installed = True
+        try:
+            sdk_version = genai.__version__
+        except AttributeError:
+            sdk_version = "unknown"
+    except ImportError:
+        pass
+
+    available = bool(
+        is_gemini
+        and configured
+        and sdk_installed
+        and getattr(analyzer, "_client", None) is not None
+    )
+
+    if is_gemini and available:
+        model_status = "trained_model_active"
+    elif is_gemini and not sdk_installed:
+        model_status = "gemini_sdk_missing"
+    elif is_gemini and not configured:
+        model_status = "gemini_api_key_missing"
+    elif is_gemini and getattr(analyzer, "_client", None) is None:
+        model_status = "gemini_client_init_error"
+    else:
+        model_status = "no_trained_crop_disease_model"
+
     return {
+        "provider": "Google Gemini" if is_gemini else "AgriGuardian Prototype Heuristic",
         "analyzer": analyzer.name,
+        "model": analyzer.version,
         "version": analyzer.version,
-        "analysis_type": "prototype_visual_analysis",
-        "model_status": "no_trained_crop_disease_model",
+        "sdk": "google-genai",
+        "sdk_version": sdk_version if is_gemini else "N/A",
+        "configured": configured,
+        "available": available,
+        "analysis_type": "multimodal_crop_visual_analysis" if is_gemini else "prototype_visual_analysis",
+        "model_status": model_status,
         "capabilities": [
+            "image_validation",
+            "image_dimensions",
+            "crop_species_identification",
+            "plant_part_detection",
+            "visual_symptom_observation",
+            "possible_issue_estimation",
+            "severity_assessment",
+            "farmer_friendly_recommendations",
+            "image_quality_and_retake_tips",
+            "non_crop_rejection",
+        ] if is_gemini else [
             "image_validation",
             "image_dimensions",
             "image_format_detection",
@@ -103,13 +164,18 @@ def get_vision_model_status() -> dict[str, Any]:
             "green_pixel_ratio_estimation",
         ],
         "not_capable_of": [
-            "crop_disease_diagnosis",
-            "disease_confidence_scoring",
-            "treatment_recommendation",
-            "species_identification",
+            "guaranteed_laboratory_diagnosis",
+            "unverified_chemical_dosage_instructions",
         ],
         "note": (
-            "A trained crop-disease computer-vision model is a planned future extension. "
-            "The VisionAnalyzer interface is ready to accept it."
+            "Multimodal Vision AI active via Google Gemini."
+            if (is_gemini and available)
+            else "Gemini API key is not configured or SDK is unavailable. Running in prototype heuristic mode."
         ),
     }
+
+
+def reset_analyzer() -> None:
+    """Reset the cached analyzer singleton. Used in tests to force re-initialization."""
+    global _ANALYZER
+    _ANALYZER = None
